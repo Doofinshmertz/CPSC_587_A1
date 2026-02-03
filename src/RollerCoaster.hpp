@@ -21,7 +21,7 @@ namespace modelling
          * @param _min_v the minimum velocity
          * @param _decel_frac the fraction of the curve distance a which point the deceleration starts
          */
-        RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float delta_s);
+        RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float delta_s, float delta_h);
 
         /**
          * delete the curve, arclength table, and track
@@ -85,11 +85,17 @@ namespace modelling
         // related to arc length parameterization
         float delta_u;
         float delta_s;
+        float delta_h; // used for finding the normal to the curve
+
+        // gravity
+        glm::vec3 gravity = glm::vec3(0.0f, 9.81f, 0.0f);
 
 
         /**
          * wrap s around the length of the track
          */
         float WrapS(float s) const;
+
+        void PrintMat4(glm::mat4 M) const;
     };
 }

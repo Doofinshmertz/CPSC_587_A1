@@ -108,7 +108,7 @@ int main(void) {
 	float U = 0.f;
 
 	float min_v = 5.0f;
-	modelling::RollerCoaster roller_coaster(1.0f, min_v, 0.9f, 0.1f);
+	modelling::RollerCoaster roller_coaster(1.0f, min_v, 0.9f, 0.1f, 0.001f);
 	roller_coaster.UpdateCurve(curve);
 
 	// the s position of the roller coaster

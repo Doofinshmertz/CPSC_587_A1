@@ -4,13 +4,14 @@
 namespace modelling
 {
 
-    RollerCoaster::RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float _delta_s)
+    RollerCoaster::RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float _delta_s, float _delta_h)
     {
         // initialize values
         s_dist = _s_dist;
         min_v = _min_v;
         decel_frac = _decel_frac;
         delta_s = _delta_s;
+        delta_h = _delta_h;
     }
 
     RollerCoaster::~RollerCoaster()
@@ -76,10 +77,69 @@ namespace modelling
 
     glm::mat4 RollerCoaster::GetTransformAtPosition(float s) const
     {
-        // get the position at this s value
+        // get the positions at this s value
         glm::vec3 p = curve(table(s));
+        glm::vec3 p_nh = curve(table(s - delta_h));
+        glm::vec3 p_h = curve(table(s + delta_h));
+
+        // the vectors forming the triangle
+        glm::vec3 a = p - p_nh;
+        glm::vec3 b = p_h - p;
+        glm::vec3 c = p_h - p_nh;
+
+        // the tangents
+        glm::vec3 T = c / glm::length(c);
+        glm::vec3 t0 = a / glm::length(a);
+        glm::vec3 t1 = b / glm::length(b);
+
+        // the normal vector
+        glm::vec3 n_raw = t0 - t1;
+        n_raw = n_raw / glm::length(n_raw);
+        n_raw = n_raw - (glm::dot(n_raw, T)*T);
+        n_raw = n_raw / glm::length(n_raw);
+
+        // the curvature
+        float k = 2.0f * glm::length(glm::cross(t1, t0)) / glm::length(c);
+
+        // the acceleration at this point
+        float v = GetSpeedAtPos(s);
+        glm::vec3 acc = n_raw * k * v * v;
+
+        // gravity tangent
+        glm::vec3 g_tan = gravity - glm::dot(gravity, T)*T;
+
+        // total acceleration vector
+        acc = acc - g_tan;
+
+        // true normal
+        n_raw = acc / glm::length(acc);
+
+        // bi-normal
+        glm::vec3 B = glm::cross(n_raw, T);
+
+        glm::mat4 M = glm::mat4{1.0f};
+        
+        
+        M[0][0] = B.x;
+        M[0][1] = B.y;
+        M[0][2] = B.z;
+
+        M[1][0] = n_raw.x;
+        M[1][1] = n_raw.y;
+        M[1][2] = n_raw.z;
+
+        M[2][0] = T.x;
+        M[2][1] = T.y;
+        M[2][2] = T.z;
+        
+        M[3][0] = p.x;
+        M[3][1] = p.y;
+        M[3][2] = p.z;
+        
+
         // create the transform matrix
-        glm::mat4 M = glm::scale(glm::translate(glm::mat4{1.0f}, p), glm::vec3{0.75});
+        M = glm::scale(M, glm::vec3{0.75});
+        PrintMat4(M);
         // store the transform matrix
         return M;
     }
@@ -124,5 +184,21 @@ namespace modelling
         }
 
         return std::fmod(s, table.arc_length);
+    }
+
+    void RollerCoaster::PrintMat4(glm::mat4 M) const
+    {
+
+        printf("Matrix:\n\n");
+        for(int i =0; i < 4; i++)
+        {
+            printf("| ");
+            for(int j = 0; j < 4; j++)
+            {
+                printf("%6.2f", M[j][i]);
+            }
+
+            printf(" |\n");
+        }
     }
 }
