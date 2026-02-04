@@ -63,6 +63,8 @@ namespace modelling {
 		float max_height = 0;
 		float s_max_height = 0;
 
+		void TestTable(float jump);
+
 	private:
 		table_t m_values;
 		float m_delta_s = 1.f;
@@ -70,6 +72,11 @@ namespace modelling {
 
 
 		size_t indexAt(float s) const;
+
+		/**
+		 * wrap s around the length of the track
+		 */
+		float WrapS(float s) const;
 	};
 
 	//***** STUDENTS TO-DO *****//

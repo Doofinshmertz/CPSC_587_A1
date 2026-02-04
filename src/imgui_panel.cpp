@@ -7,6 +7,12 @@ namespace imgui_panel {
 	bool showPanel = true;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+	// simulation controlls
+	float look_ahead = 5.00f; 
+	bool update_lookahead = false;
+	float playback_speed = 1.0f;
+	bool reset_simulation = false;
+
 	// visualization
 	bool resample = true;
 	int curveSamples = 300;
@@ -67,6 +73,22 @@ namespace imgui_panel {
 			ImGui::Spacing();
 			ImGui::Separator();
 			resetView = ImGui::Button("Reset view");
+
+			// for reseting the simulation
+			if(ImGui::Button("Reset Simulation"))
+			{
+				reset_simulation = true;
+			}
+
+			// allow user to change the simulation speed
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::SliderFloat("Playback Speed", &playback_speed, 0.1f, 10.0f);
+			// allow user to set the look ahead
+			if(ImGui::SliderFloat("Look Ahead", &look_ahead, 0.1f, 20.0f))
+			{
+				update_lookahead = true;
+			}
 
 			ImGui::Spacing();
 			ImGui::Separator();

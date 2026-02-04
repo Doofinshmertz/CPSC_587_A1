@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#define SAMPLING_FACTOR 0.01f
+
 namespace modelling
 {
     /**
@@ -46,13 +48,13 @@ namespace modelling
          * @param _min_v the minium velocity
          * @param _decel_frac the fraction of the curve distance a which point the deceleration starts
          */
-        void UpdateTrack(float _s_dist, float _min_v, float _decel_frac);
+        void UpdateTrack(float _s_dist, float _min_v, float _decel_frac, float h);
 
         /**
          * get the transform matrix at a position s
          * @param s the position allong the track to get the transform at
          */
-        glm::mat4 GetTransformAtPosition(float s) const;
+        glm::mat4 GetTransformAtPosition(float s);
 
         // get a reference to the track piece transforms
         std::vector<glm::mat4> *pieceTransforms();
@@ -88,13 +90,8 @@ namespace modelling
         float delta_h; // used for finding the normal to the curve
 
         // gravity
-        glm::vec3 gravity = glm::vec3(0.0f, 9.81f, 0.0f);
-
-
-        /**
-         * wrap s around the length of the track
-         */
-        float WrapS(float s) const;
+        glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
+        glm::vec3 last_tan = glm::vec3(0.0f, 0.0f, 0.0f);
 
         void PrintMat4(glm::mat4 M) const;
     };

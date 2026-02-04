@@ -20,6 +20,11 @@ using namespace givr::camera;
 using namespace givr::geometry;
 using namespace givr::style;
 
+#define SEP_DIST 0.5f
+#define MIN_V 5.0f
+#define DEC_FRAC 0.9f
+#define DELTA_S 0.34f
+
 
 // This boilerplate sets up work for the Hermite Curve and Arc Length Table. Each will indicate which functions to complete
 // You are also expected to implement the Single Particle kinamatics and Framing of the curve (and bonuses) from scratch
@@ -107,8 +112,7 @@ int main(void) {
 	size_t cp_index = 0;
 	float U = 0.f;
 
-	float min_v = 5.0f;
-	modelling::RollerCoaster roller_coaster(1.0f, min_v, 0.9f, 0.1f, 0.001f);
+	modelling::RollerCoaster roller_coaster(SEP_DIST, MIN_V, DEC_FRAC, DELTA_S, imgui_panel::look_ahead);
 	roller_coaster.UpdateCurve(curve);
 
 	// the s position of the roller coaster
@@ -189,10 +193,23 @@ int main(void) {
 			cp_index = (cp_index + 1) % curve.controlPoints().size();
 			U = std::fmod(U + 0.001f, 1.f);
 			// update s
-			s = s + roller_coaster.GetSpeedAtPos(s) * dt;
-			printf("speed: %7.3f\n", roller_coaster.GetSpeedAtPos(s));
+			s = s + roller_coaster.GetSpeedAtPos(s) * dt * imgui_panel::playback_speed;
+			//printf("speed: %7.3f\n", roller_coaster.GetSpeedAtPos(s));
 		}
 
+		if(imgui_panel::update_lookahead)
+		{
+			roller_coaster.UpdateTrack(SEP_DIST, MIN_V, DEC_FRAC, imgui_panel::look_ahead);
+			imgui_panel::update_lookahead = false;
+		}
+
+		if(imgui_panel::reset_simulation)
+		{
+			s = 0.0f;
+			imgui_panel::reset_simulation = false;
+		}
+
+		
 		// TODO: use the trasform array with the positions and rotations to place the track pieces
 		std::vector<glm::mat4>* piece_transforms = roller_coaster.pieceTransforms();
 		for(size_t i = 0; i < piece_transforms->size(); i++)

@@ -25,7 +25,7 @@ namespace modelling
          * @param table the arcLengthTable to use 
          * @param curve the curve to use
          */
-        void setupTrack(RollerCoaster* roller_coaster, float _s_dist);
+        void setupTrack(RollerCoaster* roller_coaster, float _s_dist, float h);
 
         // get a reference to the track piece transforms
         std::vector<glm::mat4>* pieceTransforms();

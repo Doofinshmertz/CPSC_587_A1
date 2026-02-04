@@ -39,6 +39,7 @@ namespace modelling {
 	// Gets the U value (linearly calculated) at s
 	float ArcLengthTable::operator()(float s) const {
 
+		s = WrapS(s);
 		// ensure no negative values
 		if(s < 0.0f) {return 0;} 
 		// get the nearest index for this s value
@@ -47,13 +48,20 @@ namespace modelling {
 		float s_seg = (s/m_delta_s) - float(index_a);
 		// ensure that the indices wrap around
 		index_a = index_a % m_values.size();
-		// get the index of the second u value
-		size_t index_b = (index_a + 1) % m_values.size();
 
 		// get the u values
 		float u_a = m_values[index_a];
-		float u_b = m_values[index_b];
-
+		float u_b;
+		// special case for last index
+		if(index_a == (m_values.size()-1))
+		{
+			u_b = 1.0f;
+		}
+		else
+		{
+			u_b = m_values[index_a+1];
+		}
+		
 		// interpolate the values
 		float u = (u_b - u_a) * s_seg + u_a;
 
@@ -128,5 +136,36 @@ namespace modelling {
 
 		return table;
 	}
+
+	float ArcLengthTable::WrapS(float s) const
+	{
+		// no negative values
+		if (s < 0)
+		{
+			return std::fmod(s, arc_length) + arc_length;
+		}
+
+		return std::fmod(s, arc_length);
+	}
+
+	void ArcLengthTable::TestTable(float jump)
+	{
+		float s = 0;
+		float u_last = 0;
+		float u = 0;
+		while(s < arc_length)
+		{
+			s = s + jump;
+			u = (*this)(s);			
+			printf("table(%10.3f) = %10.7f\n", s, u);
+			if(u < u_last)
+			{
+				printf("something is wrong with the table\n");
+			}
+
+			u_last = u;
+		}
+	}
+
 	//***** ******** ***** *****//
 } // namespace modelling

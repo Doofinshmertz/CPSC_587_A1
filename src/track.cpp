@@ -9,7 +9,7 @@ namespace modelling
 
     }
 
-    void Track::setupTrack(RollerCoaster* roller_coaster, float _s_dist)
+    void Track::setupTrack(RollerCoaster* roller_coaster, float _s_dist, float h)
     {
         // sudo code
         // find the number of pieces needed

@@ -25,6 +25,12 @@ extern std::string controlPointsFilePath;
 extern bool play;
 extern bool resetView;
 
+// simulation controlls
+extern float look_ahead;
+extern bool update_lookahead;
+extern float playback_speed;
+extern bool reset_simulation;
+
 // lambda function
 extern std::function<void(void)> draw;
 
