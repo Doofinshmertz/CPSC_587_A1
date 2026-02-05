@@ -30,6 +30,9 @@ extern float look_ahead;
 extern bool update_lookahead;
 extern float playback_speed;
 extern bool reset_simulation;
+extern int num_carts;
+
+extern bool use_moving_camera;
 
 // lambda function
 extern std::function<void(void)> draw;

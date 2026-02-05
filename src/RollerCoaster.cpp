@@ -1,10 +1,11 @@
 #include "RollerCoaster.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include <random>
 
 namespace modelling
 {
 
-    RollerCoaster::RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float _delta_s, float _delta_h)
+    RollerCoaster::RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float _delta_s, float _delta_h, float _sup_spacing, int _num_trees)
     {
         // initialize values
         s_dist = _s_dist;
@@ -12,6 +13,8 @@ namespace modelling
         decel_frac = _decel_frac;
         delta_s = _delta_s;
         delta_h = _delta_h;
+        support_spacing = _sup_spacing;
+        num_trees = _num_trees;
     }
 
     RollerCoaster::~RollerCoaster()
@@ -45,8 +48,10 @@ namespace modelling
 
         // track must be setup after the velocity parameters are found
         track.setupTrack(this, s_dist, delta_h);
+        GenerateSupports();
+        GenerateTrees();
 
-        printf("curve updated, H: %10.2f, v_start_dec: %10.2f\n", H, v_start_dec);
+        //printf("curve updated, H: %10.2f, v_start_dec: %10.2f\n", H, v_start_dec);
     }
 
     void RollerCoaster::UpdateArcLengthTable(float _delta_s)
@@ -67,6 +72,8 @@ namespace modelling
         v_start_dec = std::max(v_dec, min_v);
 
         track.setupTrack(this, s_dist, delta_h);
+        GenerateSupports();
+        GenerateTrees();
     }
 
     void RollerCoaster::UpdateTrack(float _s_dist, float _min_v, float _decel_frac, float h)
@@ -89,9 +96,11 @@ namespace modelling
         v_start_dec = std::max(v_dec, min_v);
 
         track.setupTrack(this, s_dist, delta_h);
+        GenerateSupports();
+        GenerateTrees();
     }
 
-    glm::mat4 RollerCoaster::GetTransformAtPosition(float s)
+    glm::mat4 RollerCoaster::GetTransformAtPosition(float s) const
     {
         // get the positions at this s value
         glm::vec3 p = curve(table(s));
@@ -115,6 +124,7 @@ namespace modelling
         // the curvature
         float k = 2.0f * glm::length(glm::cross(t0,t1)) / glm::length(c);
 
+        /*
         if(glm::length(a) > 2.0 * glm::length(b))
         {
             printf("length b is too small at position s: %10.3f, u: %10.7f, length a: %10.7f, length b: %10.7f\n", s, table(s), glm::length(a), glm::length(b));
@@ -124,6 +134,7 @@ namespace modelling
         {
             printf("length a is too small at position s: %10.3f, u: %10.7f, length a: %10.7f, length b: %10.7f\n", s, table(s), glm::length(a), glm::length(b));
         }
+        */
         //printf("radius: %10.4f, length a: %10.4f, length b: %10.4f, length c: %10.4f\n", (1.0f / k), glm::length(a), glm::length(b), glm::length(c));
 
         // the acceleration at this point
@@ -174,9 +185,72 @@ namespace modelling
         return M;
     }
 
+    glm::mat4 RollerCoaster::GetLevelTransformAtPosition(float s) const
+    {
+        // get the positions at this s value
+        glm::vec3 p = curve(table(s));
+        glm::vec3 p_nh = curve(table(s - delta_h));
+        glm::vec3 p_h = curve(table(s + delta_h));
+
+        // the vectors forming the triangle
+        glm::vec3 c = p_h - p_nh;
+
+        // the tangents
+        glm::vec3 T = glm::normalize(c);
+        
+
+        // total acceleration vector
+        glm::vec3 N = glm::normalize((-gravity));
+
+        // gravity tangent
+        T = glm::normalize(T - glm::dot(T, N) * N);
+
+        // bi-normal
+        glm::vec3 B = glm::cross(N, T);
+
+        glm::mat4 M = glm::mat4{1.0f};
+
+        M[0][0] = B.x;
+        M[0][1] = B.y;
+        M[0][2] = B.z;
+
+        M[1][0] = N.x;
+        M[1][1] = N.y;
+        M[1][2] = N.z;
+
+        M[2][0] = T.x;
+        M[2][1] = T.y;
+        M[2][2] = T.z;
+
+        M[3][0] = p.x;
+        M[3][1] = p.y;
+        M[3][2] = p.z;
+        //  store the transform matrix
+        return M;
+    }
+
+    glm::vec3 RollerCoaster::GetPositionAtS(float s) const
+    {
+        glm::vec3 p = curve(table(s));
+
+        return p;
+    }
+
     std::vector<glm::mat4> *RollerCoaster::pieceTransforms()
     {
         return track.pieceTransforms();
+    }
+
+    // get the support transforms
+    std::vector<glm::mat4> *RollerCoaster::SupportTransforms()
+    {
+        return &support_transforms;
+    }
+
+    // get the tree transforms
+    std::vector<glm::mat4> *RollerCoaster::TreeTransforms()
+    {
+        return &tree_transforms;
     }
 
     float RollerCoaster::GetSpeedAtPos(float s) const
@@ -187,8 +261,6 @@ namespace modelling
         {
             s = s + table.arc_length;
         }
-
-        
 
         // deceleration region use decceleration function
         if(s > s_start_dec)
@@ -227,6 +299,45 @@ namespace modelling
             }
 
             printf(" |\n");
+        }
+    }
+
+
+    void RollerCoaster::GenerateTrees()
+    {
+        tree_transforms = std::vector<glm::mat4>(num_trees);
+
+        // loop through the distances to get the positions
+        for (size_t i = 0; i < num_trees; i++)
+        {
+            // get some random positions
+            float rx = MAP_SIZE * ((float(std::rand() % 20000) / 10000.0f) - 1.0f);
+            float rz = MAP_SIZE * ((float(std::rand() % 20000) / 10000.0f) - 1.0f);
+
+            // create the random transform position
+            tree_transforms[i] = glm::scale(glm::translate(glm::mat4{1.0f}, glm::vec3(rx, -BASE_LEVEL, rz)), glm::vec3(2.0f, 5.0f, 2.0f));
+        }
+    }
+
+    void RollerCoaster::GenerateSupports()
+    {
+        // set the number of support pieces that will fit on the track
+        size_t num_pieces = size_t(table.arc_length / support_spacing);
+        support_transforms = std::vector<glm::mat4>(num_pieces);
+
+        // loop through the distances to get the positions
+        float s = 0;
+        for (size_t i = 0; i < num_pieces; i++)
+        {
+            // store the transform matrix
+            glm::mat4 temp = GetLevelTransformAtPosition(s);
+            // scale based on the height at this position
+            float height = curve(table(s)).y + BASE_LEVEL;
+            float scale = height / SUPPORT_HEIGHT;
+            support_transforms[i] = glm::scale(temp, glm::vec3(1.0f, scale, 1.0f));
+
+            // increment the s value
+            s = s + support_spacing;
         }
     }
 }

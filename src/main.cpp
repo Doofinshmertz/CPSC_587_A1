@@ -24,6 +24,9 @@ using namespace givr::style;
 #define MIN_V 5.0f
 #define DEC_FRAC 0.9f
 #define DELTA_S 0.34f
+#define CART_LENGTH 1.6f
+#define SUPPORT_SPACING 20.0f
+#define NUM_TREES 30
 
 
 // This boilerplate sets up work for the Hermite Curve and Arc Length Table. Each will indicate which functions to complete
@@ -101,18 +104,31 @@ int main(void) {
 
 	// Cart
 	Mesh cart_geometry = Mesh(Filename("./models/cart.obj"));
-	PhongStyle cart_style = Phong(Colour(1.f, 1.f, 0.f), LightPosition(100.f, 100.f, 100.f));
+	PhongStyle cart_style = Phong(Colour(1.f, 1.f, 0.0f), LightPosition(100.f, 100.f, 100.f));
 	InstancedRenderContext cart_renders = createInstancedRenderable(cart_geometry, cart_style);
 
 	// Track peice
 	Mesh track_piece = Mesh(Filename("./models/track_piece.obj"));
-	PhongStyle track_piece_style = Phong(Colour(1.f, 0.f, 1.f), LightPosition(100.0f, 100.0f, 100.0f));
+	PhongStyle track_piece_style = Phong(Colour(0.0f, 1.0f, 1.0f), LightPosition(100.0f, 100.0f, 100.0f));
 	InstancedRenderContext track_piece_render = createInstancedRenderable(track_piece, track_piece_style);
+
+	Mesh ground_geometry = Mesh(Filename("./models/Ground.obj"));
+	PhongStyle ground_style = Phong(Colour(0.4f, 0.40f, 0.20f), LightPosition(100.0f, 100.0f, 100.0f));
+	InstancedRenderContext ground_render = createInstancedRenderable(ground_geometry, ground_style);
+	glm::mat4 ground_transform = glm::scale(glm::translate(mat4f{1.f}, glm::vec3(0.0f, -10.0f, 0.0f)), glm::vec3(10.0f, 10.0f, 10.0f));
+
+	Mesh tree_geometry = Mesh(Filename("./models/Tree.obj"));
+	PhongStyle tree_style = Phong(Colour(0.1f, 0.70f, 0.10f), LightPosition(100.0f, 100.0f, 100.0f));
+	InstancedRenderContext tree_render = createInstancedRenderable(tree_geometry, tree_style);
+
+	Mesh sup_geometry = Mesh(Filename("./models/Track_support.obj"));
+	PhongStyle sup_style = Phong(Colour(0.0f, 1.0f, 1.0f), LightPosition(100.0f, 100.0f, 100.0f));
+	InstancedRenderContext sup_render = createInstancedRenderable(sup_geometry, sup_style);
 
 	size_t cp_index = 0;
 	float U = 0.f;
 
-	modelling::RollerCoaster roller_coaster(SEP_DIST, MIN_V, DEC_FRAC, DELTA_S, imgui_panel::look_ahead);
+	modelling::RollerCoaster roller_coaster(SEP_DIST, MIN_V, DEC_FRAC, DELTA_S, imgui_panel::look_ahead, SUPPORT_SPACING, NUM_TREES);
 	roller_coaster.UpdateCurve(curve);
 
 	// the s position of the roller coaster
@@ -169,22 +185,24 @@ int main(void) {
 			updateRenderable(track_geometry, track_style, track_render);
 		}
 
-		
-
 		// Origin Render
 		auto p = vec3f{ 0.f, 0.0f, 0.0f};
 		auto M = translate(mat4f{ 1.f }, p);
 		addInstance(cart_renders, M);
 
-		/*
-		// Cart moving at each control point
-		auto cp = curve.controlPoints()[cp_index];
-		M = glm::translate(mat4f{ 1.f }, cp.position);
-		addInstance(cart_renders, M);
-		*/
+		// Cart animation
+		// train of carts
+		float D = CART_LENGTH*0.5f*float(imgui_panel::num_carts - 1);
+		for(int i = 0; i < imgui_panel::num_carts; i++)
+		{
+			addInstance(cart_renders, roller_coaster.GetTransformAtPosition((s+CART_LENGTH*float(i) - D)));
+		}
 
-		// Cart moving 
-		addInstance(cart_renders, roller_coaster.GetTransformAtPosition(s));
+		// if true then make the camera follow the cart
+		if(imgui_panel::use_moving_camera)
+		{
+			view.camera.set(givr::camera::Translation(roller_coaster.GetPositionAtS(s)));
+		}
 		
 		// Simulation
 		if (imgui_panel::play)
@@ -217,6 +235,22 @@ int main(void) {
 			addInstance(track_piece_render, (*piece_transforms)[i]);
 		}
 
+		std::vector<glm::mat4> *sup_transforms = roller_coaster.SupportTransforms();
+		for (size_t i = 0; i < sup_transforms->size(); i++)
+		{
+			addInstance(sup_render, (*sup_transforms)[i]);
+		}
+
+		std::vector<glm::mat4> *tree_transforms = roller_coaster.TreeTransforms();
+		for (size_t i = 0; i < tree_transforms->size(); i++)
+		{
+			addInstance(tree_render, (*tree_transforms)[i]);
+		}
+
+		// environment objects
+		
+		addInstance(ground_render, ground_transform);
+
 		// render
 		auto color = imgui_panel::clear_color;
 		glClearColor(color.x, color.y, color.z, color.z);
@@ -229,6 +263,9 @@ int main(void) {
 		draw(track_render, view);
 		draw(cart_renders, view);
 		draw(track_piece_render, view);
+		draw(ground_render, view);
+		draw(tree_render, view);
+		draw(sup_render, view);
 	});
 	return EXIT_SUCCESS;
 }

@@ -13,6 +13,10 @@ namespace imgui_panel {
 	float playback_speed = 1.0f;
 	bool reset_simulation = false;
 
+	// bonus stuff
+	int num_carts = 4;
+	bool use_moving_camera = false;
+
 	// visualization
 	bool resample = true;
 	int curveSamples = 300;
@@ -69,16 +73,30 @@ namespace imgui_panel {
 			ImGui::Separator();
 			if (ImGui::Button(play ? "Pause" : "Play"))
 				play = !play;
+			
+			
 
 			ImGui::Spacing();
 			ImGui::Separator();
 			resetView = ImGui::Button("Reset view");
+
+			// allow the camera to follow the carts
+			if (ImGui::Button(use_moving_camera ? "Use Stationary Camera" : "Use Moving Camera"))
+			{
+				use_moving_camera = !use_moving_camera;
+				if (!use_moving_camera)
+				{
+					resetView = true;
+				}
+			}
 
 			// for reseting the simulation
 			if(ImGui::Button("Reset Simulation"))
 			{
 				reset_simulation = true;
 			}
+
+			ImGui::SliderInt("Number of Carts", &num_carts, 1,10);
 
 			// allow user to change the simulation speed
 			ImGui::Spacing();
