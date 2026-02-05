@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #include "hermite_curve.hpp"
 
 namespace modelling {
@@ -130,6 +139,7 @@ namespace modelling {
 
 	float HermiteCurve::minSeperation()
 	{
+		// loop through controll points to find the minimum seperation distance between consecutive points
 		glm::vec3 v = (m_cps[0].position - m_cps[m_cps.size() - 1].position); 
 		float min_dist = v.x*v.x + v.y*v.y + v.z*v.z;
 
@@ -148,6 +158,7 @@ namespace modelling {
 
 	float HermiteCurve::maxSeperation()
 	{
+		// loop through control points to find the maximum seperation distance between consecutive points
 		glm::vec3 v = (m_cps[0].position - m_cps[m_cps.size() - 1].position);
 		float max_dist = v.x * v.x + v.y * v.y + v.z * v.z;
 

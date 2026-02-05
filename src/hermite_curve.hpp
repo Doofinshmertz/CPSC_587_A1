@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #pragma once
 
 #include <glm/glm.hpp>

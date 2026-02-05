@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #include "givio.h"
 #include "givr.h"
 #include "picking_controls.h"
@@ -112,23 +121,41 @@ int main(void) {
 	PhongStyle track_piece_style = Phong(Colour(0.0f, 1.0f, 1.0f), LightPosition(100.0f, 100.0f, 100.0f));
 	InstancedRenderContext track_piece_render = createInstancedRenderable(track_piece, track_piece_style);
 
+	// ground
 	Mesh ground_geometry = Mesh(Filename("./models/Ground.obj"));
 	PhongStyle ground_style = Phong(Colour(0.4f, 0.40f, 0.20f), LightPosition(100.0f, 100.0f, 100.0f));
 	InstancedRenderContext ground_render = createInstancedRenderable(ground_geometry, ground_style);
 	glm::mat4 ground_transform = glm::scale(glm::translate(mat4f{1.f}, glm::vec3(0.0f, -10.0f, 0.0f)), glm::vec3(10.0f, 10.0f, 10.0f));
 
+	// trees 
 	Mesh tree_geometry = Mesh(Filename("./models/Tree.obj"));
 	PhongStyle tree_style = Phong(Colour(0.1f, 0.70f, 0.10f), LightPosition(100.0f, 100.0f, 100.0f));
 	InstancedRenderContext tree_render = createInstancedRenderable(tree_geometry, tree_style);
 
+	// supports for holding up the track
 	Mesh sup_geometry = Mesh(Filename("./models/Track_support.obj"));
 	PhongStyle sup_style = Phong(Colour(0.0f, 1.0f, 1.0f), LightPosition(100.0f, 100.0f, 100.0f));
 	InstancedRenderContext sup_render = createInstancedRenderable(sup_geometry, sup_style);
 
-	size_t cp_index = 0;
-	float U = 0.f;
-
+	// roller coaster object managers the roller coaster
 	modelling::RollerCoaster roller_coaster(SEP_DIST, MIN_V, DEC_FRAC, DELTA_S, imgui_panel::look_ahead, SUPPORT_SPACING, NUM_TREES);
+
+	// try loading roller coaster 1 as the initial roller coaster
+	std::optional<modelling::HermiteCurve> optional_curve = modelling::readHermiteCurveFrom_OBJ_File(Filename("models/roller_coaster_1.obj"));
+	if(optional_curve)
+	{
+		// set the existing curve to the new curve vales
+		curve = optional_curve.value();
+
+		// update the redered geometry to represent the new curve
+		cp_geometry = curve.controlPointFrameGeometry();
+		cp_t_geometry = curve.controlPointGeometry();
+		track_geometry = curve.sampledGeometry(imgui_panel::curveSamples);
+
+		updateRenderable(cp_geometry, cp_style, cp_render);
+		updateRenderable(cp_t_geometry, cp_t_style, cp_t_render);
+		updateRenderable(track_geometry, track_style, track_render);
+	}
 	roller_coaster.UpdateCurve(curve);
 
 	// the s position of the roller coaster
@@ -174,9 +201,6 @@ int main(void) {
 				// then we require that delta_u * dS/du < delta_s or delta_u < du/dS * delta_s
 
 				roller_coaster.UpdateCurve(curve);
-
-				cp_index = 0;
-				U = 0.f;
 			}
 		}
 
@@ -190,8 +214,7 @@ int main(void) {
 		auto M = translate(mat4f{ 1.f }, p);
 		addInstance(cart_renders, M);
 
-		// Cart animation
-		// train of carts
+		// animate a train of carts
 		float D = CART_LENGTH*0.5f*float(imgui_panel::num_carts - 1);
 		for(int i = 0; i < imgui_panel::num_carts; i++)
 		{
@@ -204,23 +227,22 @@ int main(void) {
 			view.camera.set(givr::camera::Translation(roller_coaster.GetPositionAtS(s)));
 		}
 		
-		// Simulation
+		// Simulation update 
 		if (imgui_panel::play)
 		{
-			// increment and wrap
-			cp_index = (cp_index + 1) % curve.controlPoints().size();
-			U = std::fmod(U + 0.001f, 1.f);
 			// update s
 			s = s + roller_coaster.GetSpeedAtPos(s) * dt * imgui_panel::playback_speed;
 			//printf("speed: %7.3f\n", roller_coaster.GetSpeedAtPos(s));
 		}
 
+		// allow the user to modify the look ahead distance
 		if(imgui_panel::update_lookahead)
 		{
 			roller_coaster.UpdateTrack(SEP_DIST, MIN_V, DEC_FRAC, imgui_panel::look_ahead);
 			imgui_panel::update_lookahead = false;
 		}
 
+		// allow the user to reset the simulation
 		if(imgui_panel::reset_simulation)
 		{
 			s = 0.0f;
@@ -228,27 +250,28 @@ int main(void) {
 		}
 
 		
-		// TODO: use the trasform array with the positions and rotations to place the track pieces
+		// place the track pieces
 		std::vector<glm::mat4>* piece_transforms = roller_coaster.pieceTransforms();
 		for(size_t i = 0; i < piece_transforms->size(); i++)
 		{
 			addInstance(track_piece_render, (*piece_transforms)[i]);
 		}
 
+		// place the supports for the track
 		std::vector<glm::mat4> *sup_transforms = roller_coaster.SupportTransforms();
 		for (size_t i = 0; i < sup_transforms->size(); i++)
 		{
 			addInstance(sup_render, (*sup_transforms)[i]);
 		}
 
+		// place the trees
 		std::vector<glm::mat4> *tree_transforms = roller_coaster.TreeTransforms();
 		for (size_t i = 0; i < tree_transforms->size(); i++)
 		{
 			addInstance(tree_render, (*tree_transforms)[i]);
 		}
-
-		// environment objects
 		
+		// place the ground
 		addInstance(ground_render, ground_transform);
 
 		// render
@@ -258,9 +281,15 @@ int main(void) {
 
 		view.projection.updateAspectRatio(window.width(), window.height());
 
-		draw(cp_render, view);
-		draw(cp_t_render, view);
-		draw(track_render, view);
+		// allow the curve to be hidden
+		if(imgui_panel::show_curve)
+		{
+			draw(cp_render, view);
+			draw(cp_t_render, view);
+			draw(track_render, view);
+		}
+
+		
 		draw(cart_renders, view);
 		draw(track_piece_render, view);
 		draw(ground_render, view);

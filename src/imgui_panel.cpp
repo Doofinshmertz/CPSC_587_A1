@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #include "imgui_panel.hpp"
 
 #include <array>
@@ -20,6 +29,7 @@ namespace imgui_panel {
 	// visualization
 	bool resample = true;
 	int curveSamples = 300;
+	bool show_curve = false;
 
 	// loading
 	bool rereadControlPoints = false;
@@ -74,7 +84,11 @@ namespace imgui_panel {
 			if (ImGui::Button(play ? "Pause" : "Play"))
 				play = !play;
 			
-			
+			// allow hiding the curve/control point/ tangent render
+			if(ImGui::Button(show_curve ? "Hide Curve" : "Show Curve"))
+			{
+				show_curve = !show_curve;
+			}
 
 			ImGui::Spacing();
 			ImGui::Separator();
@@ -96,6 +110,7 @@ namespace imgui_panel {
 				reset_simulation = true;
 			}
 
+			// set the number of carts
 			ImGui::SliderInt("Number of Carts", &num_carts, 1,10);
 
 			// allow user to change the simulation speed

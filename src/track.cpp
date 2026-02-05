@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #include "track.hpp"
 #include "RollerCoaster.hpp"
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,12 +24,6 @@ namespace modelling
         // find the number of pieces needed
         // step through each s position and calculate the position and rotation
         // add the position and rotation to the array
-
-
-        if(_s_dist > (0.1 * roller_coaster->ArcLength()))
-        {
-            printf("WARNING: track piece seperation distance results in small number of track pieces\n");
-        }
 
         // set the number of track pieces that will fit on this track
         size_t num_pieces = size_t(roller_coaster->ArcLength() / _s_dist) + 1;

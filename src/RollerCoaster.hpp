@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #pragma once
 
 #include "hermite_curve.hpp"
@@ -25,8 +34,12 @@ namespace modelling
          * @param _s_dist the seperation distance for the track pieces
          * @param _min_v the minimum velocity
          * @param _decel_frac the fraction of the curve distance a which point the deceleration starts
+         * @param _delta_s the delta_s value to use for generating the arc length parameterize table
+         * @param _delta_h the look ahead distance
+         * @param _sup_spacing the spacing between support pieces (the things that hold the track in the air)
+         * @param _num_trees the number of trees to put in the scene (trees look nice)
          */
-        RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float delta_s, float delta_h, float _sup_spacing, int _num_trees);
+        RollerCoaster(float _s_dist, float _min_v, float _decel_frac, float _delta_s, float _delta_h, float _sup_spacing, int _num_trees);
 
         /**
          * delete the curve, arclength table, and track
@@ -50,6 +63,7 @@ namespace modelling
          * @param _s_dist the seperation distance for the track pieces
          * @param _min_v the minium velocity
          * @param _decel_frac the fraction of the curve distance a which point the deceleration starts
+         * @param h the look ahead distance
          */
         void UpdateTrack(float _s_dist, float _min_v, float _decel_frac, float h);
 
@@ -64,6 +78,7 @@ namespace modelling
          */
         glm::mat4 GetLevelTransformAtPosition(float s) const;
 
+        // get the raw position at this s coordinate
         glm::vec3 GetPositionAtS(float s) const;
 
         // get a reference to the track piece transforms
@@ -108,6 +123,7 @@ namespace modelling
         // extra stuff
         float support_spacing;
         int num_trees;
+
         // the array of transforms for each to the supports
         std::vector<glm::mat4> support_transforms = std::vector<glm::mat4>(0);
         // the array of transforms for the trees
@@ -115,7 +131,6 @@ namespace modelling
 
         // gravity
         glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
-        glm::vec3 last_tan = glm::vec3(0.0f, 0.0f, 0.0f);
 
         void PrintMat4(glm::mat4 M) const;
 

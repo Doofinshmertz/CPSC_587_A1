@@ -1,18 +1,11 @@
 /**
-	Object to Arc-length Parameterize the given curve
-		f : s -> U (arc length s to global U)
-	This object is designed to be closed (the beginning is the end), though a slight change to the functions can make it open curves
-	Given dS value, each U value is saved at each dS step
-
-		Table[0] (0 * dS) = u_0 (Usually 0)
-		Table[1] (1 * dS) = u_1 
-		Table[2] (2 * dS) = u_2 
-				....................	
-		Table[i] (i * dS) = u_i
-				....................
-		Table[N-1] ((N-1) * dS) = u_(N-1)
-		//END (next is Table[0], this segment ds_end <= dS
-  **/
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
 
 #pragma once
 
@@ -51,25 +44,16 @@ namespace modelling {
 		float operator()(float s) const;
 		//***** ******** ***** *****//
 
-		/**
-		 * find the maximum height along the curve and the point at which it occurs
-		 */
-		
-
-		float getMaxHeight() const;
-		float posMaxHeight() const;
-
 		float arc_length = 0.0; // this is the arc length that was used in the calculation of this table
-		float max_height = 0;
-		float s_max_height = 0;
+		float max_height = 0; // the maximum height encountered along the curve
+		float s_max_height = 0; // the s coordinate of the maximum height
 
+		// prints the values in the table
 		void TestTable(float jump);
 
 	private:
 		table_t m_values;
 		float m_delta_s = 1.f;
-
-
 
 		size_t indexAt(float s) const;
 

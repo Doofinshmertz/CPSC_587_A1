@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #pragma once
 
 #include <iosfwd>
@@ -32,7 +41,9 @@ extern float playback_speed;
 extern bool reset_simulation;
 extern int num_carts;
 
+// view controlls
 extern bool use_moving_camera;
+extern bool show_curve;
 
 // lambda function
 extern std::function<void(void)> draw;

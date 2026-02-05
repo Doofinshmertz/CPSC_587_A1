@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #include "RollerCoaster.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <random>
@@ -24,6 +33,7 @@ namespace modelling
 
     void RollerCoaster::UpdateCurve(HermiteCurve new_curve)
     {
+        // set the new curve
         curve = new_curve;
 
         // we want the delta u value to result in smaller distance jumps than delta_s
@@ -49,6 +59,8 @@ namespace modelling
         // track must be setup after the velocity parameters are found
         track.setupTrack(this, s_dist, delta_h);
         GenerateSupports();
+
+        // we only want to re-generate the trees after a new track is loaded
         GenerateTrees();
 
         //printf("curve updated, H: %10.2f, v_start_dec: %10.2f\n", H, v_start_dec);
@@ -56,6 +68,7 @@ namespace modelling
 
     void RollerCoaster::UpdateArcLengthTable(float _delta_s)
     {
+        // re-calculate delta u value
         delta_s = _delta_s;
         delta_u = (SAMPLING_FACTOR * delta_s) / (float(curve.size()) * curve.maxSeperation());
         table = calculateArcLengthTable(curve, delta_s, delta_u);
@@ -71,9 +84,9 @@ namespace modelling
         // bound with min_v
         v_start_dec = std::max(v_dec, min_v);
 
+        // update track and other objects
         track.setupTrack(this, s_dist, delta_h);
         GenerateSupports();
-        GenerateTrees();
     }
 
     void RollerCoaster::UpdateTrack(float _s_dist, float _min_v, float _decel_frac, float h)
@@ -97,7 +110,6 @@ namespace modelling
 
         track.setupTrack(this, s_dist, delta_h);
         GenerateSupports();
-        GenerateTrees();
     }
 
     glm::mat4 RollerCoaster::GetTransformAtPosition(float s) const
@@ -197,9 +209,8 @@ namespace modelling
 
         // the tangents
         glm::vec3 T = glm::normalize(c);
-        
 
-        // total acceleration vector
+        // normal vector alligned with gravity
         glm::vec3 N = glm::normalize((-gravity));
 
         // gravity tangent
@@ -283,8 +294,6 @@ namespace modelling
     {
         return table.arc_length;
     }
-
-
 
     void RollerCoaster::PrintMat4(glm::mat4 M) const
     {

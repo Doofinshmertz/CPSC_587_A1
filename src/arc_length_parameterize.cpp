@@ -1,3 +1,12 @@
+/**
+ * CPSC 587 W26 Assignment 1
+ * @name Holden Holzer
+ * @email holden.holzer@ucalgary.ca
+ *
+ * Modified from provided Assignment 1 - Boilerplate
+ * @authors Copyright 2019 Lakin Wecker, Jeremy Hart, Andrew Owens and Others (see AUTHORS)
+ */
+
 #include "arc_length_parameterize.hpp"
 
 namespace modelling {
@@ -39,9 +48,8 @@ namespace modelling {
 	// Gets the U value (linearly calculated) at s
 	float ArcLengthTable::operator()(float s) const {
 
+		// wrap s value to ensure s in [0, arc length]
 		s = WrapS(s);
-		// ensure no negative values
-		if(s < 0.0f) {return 0;} 
 		// get the nearest index for this s value
 		size_t index_a = size_t(std::floor(s / m_delta_s));
 		// get the segment s value
@@ -139,7 +147,7 @@ namespace modelling {
 
 	float ArcLengthTable::WrapS(float s) const
 	{
-		// no negative values
+		// wrap s around to ensure it is between 0 and the arc length
 		if (s < 0)
 		{
 			return std::fmod(s, arc_length) + arc_length;
