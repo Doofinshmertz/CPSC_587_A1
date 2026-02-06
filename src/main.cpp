@@ -209,11 +209,6 @@ int main(void) {
 			updateRenderable(track_geometry, track_style, track_render);
 		}
 
-		// Origin Render
-		auto p = vec3f{ 0.f, 0.0f, 0.0f};
-		auto M = translate(mat4f{ 1.f }, p);
-		addInstance(cart_renders, M);
-
 		// animate a train of carts
 		float D = CART_LENGTH*0.5f*float(imgui_panel::num_carts - 1);
 		for(int i = 0; i < imgui_panel::num_carts; i++)
